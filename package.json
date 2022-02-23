@@ -1,0 +1,19 @@
+{
+  "name": "cdn",
+  "version": "1.0.0",
+  "description": "Content Delivery Network",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MeshSocialNetwork/CDN.git"
+  },
+  "author": "Lucas Pape",
+  "license": "AGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/MeshSocialNetwork/CDN/issues"
+  },
+  "homepage": "https://github.com/MeshSocialNetwork/CDN#readme"
+}
