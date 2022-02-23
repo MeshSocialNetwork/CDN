@@ -4,6 +4,7 @@ const webp = require('webp-converter')
 const imageThumbnail = require('image-thumbnail')
 
 const CONTENT_DIR = '/static/content/';
+const THUMBNAIL_DIR = '/static/thumbnails/'
 const TEMP_DIR = '/tmp/';
 
 module.exports = class Api {
@@ -45,7 +46,7 @@ module.exports = class Api {
 
             try{
                 if (fs.existsSync(path)) {
-                    let thumbnailPath = CONTENT_DIR + '_thumbnail-' + imageId
+                    let thumbnailPath = THUMBNAIL_DIR + '_thumbnail-' + imageId
 
                     let range = req.headers.range
 
