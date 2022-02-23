@@ -12,7 +12,7 @@ const busboy = require('connect-busboy')
 const API_PREFIX = `/api/cdn/${config.cdnId}`
 const PORT = 80
 
-let database = new Database()
+let database = new Database(this.cdnId)
 
 database.connect().then(() => {
     console.log('Connected to database')
