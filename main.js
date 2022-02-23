@@ -2,6 +2,7 @@ const config = require('./config.json')
 
 const Database = require('./database.js')
 const Api = require('./api.js')
+const Load = require('./load.js')
 
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -17,6 +18,7 @@ database.connect().then(() => {
     console.log('Connected to database')
 
     let api = new Api(database, config)
+    let load = new Load(database)
 
     const app = express()
     app.use(bodyParser.json({limit: '50mb'}))
@@ -29,10 +31,12 @@ database.connect().then(() => {
 
     app.get(API_PREFIX + '/image/:id', (req, res) => {
         api.getImage(req, res)
+        load.increaseCount()
     })
 
     app.post(API_PREFIX + '/image', (req, res) => {
         api.uploadImage(req, res)
+        load.increaseCount()
     })
 
     app.listen(PORT, () => {

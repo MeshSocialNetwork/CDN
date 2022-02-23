@@ -10,6 +10,19 @@ const DATABASE_NAME = 'mesh'
 const USER_TABLE = 'users'
 const SESSION_TABLE = 'sessions'
 
+const CDN_TABLE = 'cdn'
+const CDN_FIELDS = {
+    id: {
+        type: "text",
+        indexed: true,
+        unique: true
+    },
+    load: {
+        type: "number",
+        indexed: true
+    }
+}
+
 const IMAGE_TABLE = 'images'
 const IMAGE_FIELDS = {
     user: {
@@ -27,8 +40,10 @@ const IMAGE_FIELDS = {
 }
 
 module.exports = class Database {
-    constructor() {
+    constructor(cdnId) {
         this.database = new InfiniteDB(HOST, DATABASE_NAME)
+
+        this.cdnId = cdnId
     }
 
     async connect() {
@@ -40,10 +55,27 @@ module.exports = class Database {
         }catch (e) {
             console.log('Could not create image table')
         }
+
+        try{
+            await this.database.createTable(CDN_TABLE, CDN_FIELDS)
+            console.log('Created cdn table')
+        }catch (e) {
+            console.log('Could not create cdn table')
+        }
+
+        try{
+            await this.database.insert(CDN_TABLE, {id: this.cdnId, load: 0})
+        }catch (e) {
+
+        }
     }
 
     async insertImage(user, image, cdn){
         await this.database.insert(IMAGE_TABLE, {user: user, image: image, cdn: cdn})
+    }
+
+    async updateLoad(load){
+        await this.database.update(CDN_TABLE, {id: this.cdnId, load: load})
     }
 
     async getSession(id) {
