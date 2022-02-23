@@ -34,6 +34,11 @@ database.connect().then(() => {
         api.getImage(req, res)
     })
 
+    app.get(API_PREFIX + '/image/:id/thumbnail', (req, res) => {
+        load.increaseCount()
+        api.getThumbnail(req, res)
+    })
+
     app.post(API_PREFIX + '/image', (req, res) => {
         load.increaseCount()
         api.uploadImage(req, res)

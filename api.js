@@ -1,6 +1,7 @@
 const fs = require('fs')
 const {v4: uuidv4} = require('uuid')
 const webp = require('webp-converter')
+const imageThumbnail = require('image-thumbnail')
 
 const CONTENT_DIR = '/static/content/';
 const TEMP_DIR = '/tmp/';
@@ -23,41 +24,49 @@ module.exports = class Api {
                 if (fs.existsSync(path)) {
                     let range = req.headers.range
 
-                    const stat = fs.statSync(path)
-                    const fileSize = stat.size
-
-                    if (range) {
-                        const parts = range.replace(/bytes=/, '').split('-')
-                        const start = parseInt(parts[0], 10)
-                        const end = parts[1]
-                            ? parseInt(parts[1], 10)
-                            : fileSize - 1
-
-                        const chunkSize = (end - start) + 1;
-                        const file = fs.createReadStream(path, {start, end})
-
-                        const head = {
-                            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-                            'Accept-Ranges': 'bytes',
-                            'Content-Length': chunkSize,
-                            'Content-Type': 'image/webp',
-                        }
-
-                        res.writeHead(206, head)
-                        file.pipe(res)
-                    } else {
-                        const header = {
-                            'Content-Length': fileSize,
-                            'Content-Type': 'image/webp'
-                        }
-
-                        res.writeHead(200, header)
-                        fs.createReadStream(path).pipe(res)
-                    }
+                    Api.#sendImage(res, range, path)
                 } else {
                     res.status(404).send({message: 'Image not found'})
                 }
             } catch (e) {
+                res.status(500).send({message: 'Internal server error'})
+                console.log(e)
+            }
+        }
+    }
+
+    async getThumbnail(req, res) {
+        let imageId = req.params.id
+
+        if (!imageId) {
+            res.status(400).send({message: 'No imageId'})
+        } else {
+            let path = CONTENT_DIR + imageId
+
+            try{
+                if (fs.existsSync(path)) {
+                    let thumbnailPath = CONTENT_DIR + '_thumbnail-' + imageId
+
+                    let range = req.headers.range
+
+                    if(fs.existsSync(thumbnailPath)){
+                        Api.#sendImage(res, range, thumbnailPath)
+                    }else{
+                        let thumbnail = await imageThumbnail(path, { percentage: 25, responseType: 'buffer'})
+
+                        fs.writeFile(thumbnailPath, thumbnail, (e) => {
+                            if(e){
+                                res.status(500).send({message: 'Failed to save thumbnail'})
+                                console.log(e)
+                            }else{
+                                Api.#sendImage(res, range, thumbnailPath)
+                            }
+                        })
+                    }
+                }else{
+                    res.status(404).send({message: 'Image not found'})
+                }
+            }catch (e) {
                 res.status(500).send({message: 'Internal server error'})
                 console.log(e)
             }
@@ -97,6 +106,40 @@ module.exports = class Api {
                     console.log(e)
                 }
             })
+        }
+    }
+
+    static #sendImage(res, range, path){
+        const stat = fs.statSync(path)
+        const fileSize = stat.size
+
+        if (range) {
+            const parts = range.replace(/bytes=/, '').split('-')
+            const start = parseInt(parts[0], 10)
+            const end = parts[1]
+                ? parseInt(parts[1], 10)
+                : fileSize - 1
+
+            const chunkSize = (end - start) + 1;
+            const file = fs.createReadStream(path, {start, end})
+
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize,
+                'Content-Type': 'image/webp',
+            }
+
+            res.writeHead(206, head)
+            file.pipe(res)
+        } else {
+            const header = {
+                'Content-Length': fileSize,
+                'Content-Type': 'image/webp'
+            }
+
+            res.writeHead(200, header)
+            fs.createReadStream(path).pipe(res)
         }
     }
 
