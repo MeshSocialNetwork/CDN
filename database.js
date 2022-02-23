@@ -66,7 +66,7 @@ module.exports = class Database {
         try{
             await this.database.insert(CDN_TABLE, {id: this.cdnId, load: 0})
         }catch (e) {
-
+            console.log(e)
         }
     }
 
