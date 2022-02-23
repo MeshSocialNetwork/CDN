@@ -30,13 +30,13 @@ database.connect().then(() => {
     }))
 
     app.get(API_PREFIX + '/image/:id', (req, res) => {
-        api.getImage(req, res)
         load.increaseCount()
+        api.getImage(req, res)
     })
 
     app.post(API_PREFIX + '/image', (req, res) => {
-        api.uploadImage(req, res)
         load.increaseCount()
+        api.uploadImage(req, res)
     })
 
     app.listen(PORT, () => {
