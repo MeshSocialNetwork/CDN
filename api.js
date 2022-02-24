@@ -82,8 +82,6 @@ module.exports = class Api {
         if (session) {
             try{
                 if(await this.permission.uploadImage(session.user.id)){
-                    req.pipe(req.busboy)
-
                     req.busboy.on('file', (_, file) => {
                         const tempId = uuidv4()
 
@@ -111,6 +109,12 @@ module.exports = class Api {
                             console.log(e)
                         }
                     })
+
+                    req.busboy.on('field', () => {
+                        res.status(400).send({message: 'Did not understand form'})
+                    })
+
+                    req.pipe(req.busboy)
                 }else{
                     res.status(401).send({message: 'No permission to upload image'})
                 }
