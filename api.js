@@ -2,7 +2,7 @@ const fs = require('fs')
 const {v4: uuidv4} = require('uuid')
 const webp = require('webp-converter')
 const imageThumbnail = require('image-thumbnail')
-const Permission = require('permission.js')
+const Permission = require('./permission.js')
 
 const CONTENT_DIR = '/static/content/';
 const THUMBNAIL_DIR = '/static/thumbnails/'
