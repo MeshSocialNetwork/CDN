@@ -4,7 +4,7 @@
   "description": "Content Delivery Network",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,15 @@
   "bugs": {
     "url": "https://github.com/MeshSocialNetwork/CDN/issues"
   },
-  "homepage": "https://github.com/MeshSocialNetwork/CDN#readme"
+  "homepage": "https://github.com/MeshSocialNetwork/CDN#readme",
+  "dependencies": {
+    "body-parser": "^1.19.2",
+    "connect-busboy": "^1.0.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.17.3",
+    "image-thumbnail": "^1.0.14",
+    "infinitedb": "^1.0.15",
+    "uuid": "^8.3.2",
+    "webp-converter": "^2.3.3"
+  }
 }
