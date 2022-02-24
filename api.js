@@ -2,6 +2,7 @@ const fs = require('fs')
 const {v4: uuidv4} = require('uuid')
 const webp = require('webp-converter')
 const imageThumbnail = require('image-thumbnail')
+const Permission = require('permission.js')
 
 const CONTENT_DIR = '/static/content/';
 const THUMBNAIL_DIR = '/static/thumbnails/'
@@ -11,6 +12,7 @@ module.exports = class Api {
     constructor(database, config) {
         this.database = database
         this.config = config
+        this.permission = new Permission(this.database)
     }
 
     async getImage(req, res) {
@@ -78,35 +80,44 @@ module.exports = class Api {
         let session = await this.#checkSession(req, res)
 
         if (session) {
-            req.pipe(req.busboy)
+            try{
+                if(await this.permission.uploadImage(session.user.id)){
+                    req.pipe(req.busboy)
 
-            req.busboy.on('file', (_, file) => {
-                const tempId = uuidv4()
+                    req.busboy.on('file', (_, file) => {
+                        const tempId = uuidv4()
 
-                try {
-                    let writeStream = fs.createWriteStream(TEMP_DIR + tempId)
-                    file.pipe(writeStream)
+                        try {
+                            let writeStream = fs.createWriteStream(TEMP_DIR + tempId)
+                            file.pipe(writeStream)
 
-                    writeStream.on('close', () => {
-                        const imageId = uuidv4() + '.webp'
+                            writeStream.on('close', () => {
+                                const imageId = uuidv4() + '.webp'
 
-                        webp.cwebp(TEMP_DIR + tempId, CONTENT_DIR + imageId, '-q 80').then(() => {
-                            this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
-                                res.send({message: 'Image uploaded', imageId: imageId, cdnId: this.config.cdnId})
-                            }).catch(e => {
-                                res.status(500).send({message: 'Internal server error'})
-                                console.log(e)
+                                webp.cwebp(TEMP_DIR + tempId, CONTENT_DIR + imageId, '-q 80').then(() => {
+                                    this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
+                                        res.send({message: 'Image uploaded', imageId: imageId, cdnId: this.config.cdnId})
+                                    }).catch(e => {
+                                        res.status(500).send({message: 'Internal server error'})
+                                        console.log(e)
+                                    })
+                                }).catch((e) => {
+                                    res.status(500).send({message: 'Internal server error'})
+                                    console.log(e)
+                                })
                             })
-                        }).catch((e) => {
+                        } catch (e) {
                             res.status(500).send({message: 'Internal server error'})
                             console.log(e)
-                        })
+                        }
                     })
-                } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
-                    console.log(e)
+                }else{
+                    res.status(401).send({message: 'No permission to upload image'})
                 }
-            })
+            }catch (e) {
+                res.status(500).send({message: 'Internal server error'})
+                console.log(e)
+            }
         }
     }
 
@@ -153,12 +164,16 @@ module.exports = class Api {
 
                 if (session) {
                     if (session.user) {
-                        return session
+                        if(session.user.emailVerified){
+                            return session
+                        }else{
+                            res.status(400).send({message: 'Email not verified'})
+                        }
                     } else {
-                        res.send(404).send({message: 'User not found'})
+                        res.status(404).send({message: 'User not found'})
                     }
                 } else {
-                    res.send(401).send({message: 'Invalid session'})
+                    res.status(401).send({message: 'Invalid session'})
                 }
             } catch (e) {
                 res.status(500).send({message: 'Internal server error'})

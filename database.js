@@ -39,6 +39,19 @@ const IMAGE_FIELDS = {
     }
 }
 
+const PERMISSION_TABLE = 'permissions'
+const PERMISSION_FIELDS = {
+    user: {
+        type: 'text',
+        indexed: true,
+        external: true
+    },
+    permission: {
+        type: 'text',
+        indexed: true
+    }
+}
+
 module.exports = class Database {
     constructor(cdnId) {
         this.database = new InfiniteDB(HOST, DATABASE_NAME)
@@ -106,4 +119,18 @@ module.exports = class Database {
         }
     }
 
+    async getPermission(user, permission){
+        let where = {
+            field: 'user',
+            operator: '=',
+            value: user,
+            and: {
+                field: 'permission',
+                operator: '=',
+                value: permission
+            }
+        }
+
+        return (await this.database.query(PERMISSION_TABLE, {where: where}))[0]
+    }
 }
