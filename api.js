@@ -1,6 +1,7 @@
 const fs = require('fs')
 const {v4: uuidv4} = require('uuid')
 const webp = require('webp-converter')
+const {fileTypeFromFile} = require('file-type')
 const imageThumbnail = require('image-thumbnail')
 const Permission = require('./permission.js')
 
@@ -15,11 +16,11 @@ module.exports = class Api {
         this.permission = new Permission(this.database)
     }
 
-    async getImage(req, res) {
+    async get(req, res) {
         let imageId = req.params.id
 
         if (!imageId) {
-            res.status(400).send({message: 'No imageId'})
+            res.status(400).send({message: 'No id'})
         } else {
             let path = CONTENT_DIR + imageId
 
@@ -29,7 +30,7 @@ module.exports = class Api {
 
                     Api.#sendImage(res, range, path)
                 } else {
-                    res.status(404).send({message: 'Image not found'})
+                    res.status(404).send({message: 'Not found'})
                 }
             } catch (e) {
                 res.status(500).send({message: 'Internal server error'})
@@ -92,13 +93,77 @@ module.exports = class Api {
                             writeStream.on('close', () => {
                                 const imageId = uuidv4() + '.webp'
 
-                                webp.cwebp(TEMP_DIR + tempId, CONTENT_DIR + imageId, '-q 80').then(() => {
-                                    this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
-                                        res.send({message: 'Image uploaded', imageId: imageId, cdnId: this.config.cdnId})
-                                    }).catch(e => {
-                                        res.status(500).send({message: 'Internal server error'})
-                                        console.log(e)
-                                    })
+                                webp.cwebp(TEMP_DIR + tempId, CONTENT_DIR + imageId, '-q 80').then((response) => {
+                                    if(!response){
+                                        this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
+                                            res.send({message: 'Image uploaded', imageId: imageId, cdnId: this.config.cdnId})
+                                        }).catch(e => {
+                                            res.status(500).send({message: 'Internal server error'})
+                                            console.log(e)
+                                        })
+                                    }else{
+                                        res.status(400).send({message: 'Unsupported filetype'})
+                                    }
+                                }).catch((e) => {
+                                    res.status(500).send({message: 'Internal server error'})
+                                    console.log(e)
+                                })
+                            })
+                        } catch (e) {
+                            res.status(500).send({message: 'Internal server error'})
+                            console.log(e)
+                        }
+                    })
+
+                    req.busboy.on('field', () => {
+                        res.status(400).send({message: 'Did not understand form'})
+                    })
+
+                    req.pipe(req.busboy)
+                }else{
+                    res.status(401).send({message: 'No permission to upload image'})
+                }
+            }catch (e) {
+                res.status(500).send({message: 'Internal server error'})
+                console.log(e)
+            }
+        }
+    }
+
+    async uploadAnimated(req, res){
+        let session = await this.#checkSession(req, res)
+
+        if (session) {
+            try{
+                if(await this.permission.uploadImage(session.user.id)){
+                    req.busboy.on('file', (_, file) => {
+                        const tempId = uuidv4()
+
+                        try {
+                            let writeStream = fs.createWriteStream(TEMP_DIR + tempId)
+                            file.pipe(writeStream)
+
+                            writeStream.on('close', () => {
+                                fileTypeFromFile(TEMP_DIR + tempId).then((type) => {
+                                    if(type.mime === 'image/gif'){
+                                        const imageId = uuidv4() + '.gif'
+
+                                        fs.copyFile(TEMP_DIR + tempId, CONTENT_DIR + imageId, (err) => {
+                                            if(err){
+                                                res.status(500).send({message: 'Internal server error'})
+                                                console.log(err)
+                                            }else{
+                                                this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
+                                                    res.send({message: 'Animated uploaded', imageId: imageId, cdnId: this.config.cdnId})
+                                                }).catch(e => {
+                                                    res.status(500).send({message: 'Internal server error'})
+                                                    console.log(e)
+                                                })
+                                            }
+                                        })
+                                    }else{
+                                        res.status(400).send({message: 'Unsupported filetype'})
+                                    }
                                 }).catch((e) => {
                                     res.status(500).send({message: 'Internal server error'})
                                     console.log(e)

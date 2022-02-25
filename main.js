@@ -31,7 +31,12 @@ database.connect().then(() => {
 
     app.get(API_PREFIX + '/image/:id', (req, res) => {
         load.increaseCount()
-        api.getImage(req, res)
+        api.get(req, res)
+    })
+
+    app.get(API_PREFIX + '/animated/:id', (req, res) => {
+        load.increaseCount()
+        api.get(req, res)
     })
 
     app.get(API_PREFIX + '/image/:id/thumbnail', (req, res) => {
@@ -42,6 +47,11 @@ database.connect().then(() => {
     app.post(API_PREFIX + '/image', (req, res) => {
         load.increaseCount()
         api.uploadImage(req, res)
+    })
+
+    app.post(API_PREFIX + '/animated', (req, res) => {
+        load.increaseCount()
+        api.uploadAnimated(req, res)
     })
 
     app.listen(PORT, () => {

@@ -40,17 +40,6 @@ const IMAGE_FIELDS = {
 }
 
 const PERMISSION_TABLE = 'permissions'
-const PERMISSION_FIELDS = {
-    user: {
-        type: 'text',
-        indexed: true,
-        external: true
-    },
-    permission: {
-        type: 'text',
-        indexed: true
-    }
-}
 
 module.exports = class Database {
     constructor(cdnId) {
