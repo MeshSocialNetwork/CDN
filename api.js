@@ -96,7 +96,7 @@ module.exports = class Api {
                                 webp.cwebp(TEMP_DIR + tempId, CONTENT_DIR + imageId, '-q 80').then((response) => {
                                     if(!response){
                                         this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
-                                            res.send({message: 'Image uploaded', imageId: imageId, cdnId: this.config.cdnId})
+                                            res.send({message: 'Image uploaded', id: imageId, cdnId: this.config.cdnId})
                                         }).catch(e => {
                                             res.status(500).send({message: 'Internal server error'})
                                             console.log(e)
@@ -149,15 +149,15 @@ module.exports = class Api {
                                         res.status(400).send({message: 'Unsupported filetype'})
                                     }else{
                                         if(type.mime === 'image/gif'){
-                                            const imageId = uuidv4() + '.gif'
+                                            const animatedId = uuidv4() + '.gif'
 
-                                            fs.copyFile(TEMP_DIR + tempId, CONTENT_DIR + imageId, (err) => {
+                                            fs.copyFile(TEMP_DIR + tempId, CONTENT_DIR + animatedId, (err) => {
                                                 if(err){
                                                     res.status(500).send({message: 'Internal server error'})
                                                     console.log(err)
                                                 }else{
-                                                    this.database.insertImage(session.user.id, imageId, this.config.cdnId).then(() => {
-                                                        res.send({message: 'Animated uploaded', imageId: imageId, cdnId: this.config.cdnId})
+                                                    this.database.insertImage(session.user.id, animatedId, this.config.cdnId).then(() => {
+                                                        res.send({message: 'Animated uploaded', id: animatedId, cdnId: this.config.cdnId})
                                                     }).catch(e => {
                                                         res.status(500).send({message: 'Internal server error'})
                                                         console.log(e)
