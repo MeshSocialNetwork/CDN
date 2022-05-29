@@ -23,7 +23,7 @@
     "detect-file-type": "^0.2.8",
     "express": "^4.17.3",
     "image-thumbnail": "^1.0.14",
-    "infinitedb": "^1.0.29",
+    "infinitedb": "^1.1.3",
     "uuid": "^8.3.2",
     "webp-converter": "^2.3.3"
   }

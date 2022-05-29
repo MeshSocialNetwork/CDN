@@ -2,7 +2,7 @@ const InfiniteDB = require('infinitedb')
 
 const HOST = {
     hostname: 'infinitedb',
-    port: '6677'
+    port: '8080'
 }
 
 const DATABASE_NAME = 'mesh'
@@ -52,32 +52,32 @@ module.exports = class Database {
         await this.database.connect()
 
         try{
-            await this.database.createTable(IMAGE_TABLE, IMAGE_FIELDS)
+            await this.database.createTableInDatabase(IMAGE_TABLE, IMAGE_FIELDS)
             console.log('Created image table')
         }catch (e) {
             console.log('Could not create image table')
         }
 
         try{
-            await this.database.createTable(CDN_TABLE, CDN_FIELDS)
+            await this.database.createTableInDatabase(CDN_TABLE, CDN_FIELDS)
             console.log('Created cdn table')
         }catch (e) {
             console.log('Could not create cdn table')
         }
 
         try{
-            await this.database.insert(CDN_TABLE, {id: this.cdnId, load: 0})
+            await this.database.insertToDatabaseTable(CDN_TABLE, {id: this.cdnId, load: 0})
         }catch (e) {
             console.log(e)
         }
     }
 
     async insertImage(user, image, cdn){
-        await this.database.insert(IMAGE_TABLE, {user: user, image: image, cdn: cdn})
+        await this.database.insertToDatabaseTable(IMAGE_TABLE, {user: user, image: image, cdn: cdn})
     }
 
     async updateLoad(load){
-        await this.database.update(CDN_TABLE, {id: this.cdnId, load: load})
+        await this.database.updateInDatabaseTable(CDN_TABLE, {id: this.cdnId, load: load})
     }
 
     async getSession(id) {
@@ -98,7 +98,7 @@ module.exports = class Database {
             }
         ]
 
-        let session = (await this.database.get(SESSION_TABLE, {where: where, implement: implement}))[0]
+        let session = (await this.database.getFromDatabaseTable(SESSION_TABLE, {where: where, implement: implement}))[0]
 
         if(session && session.user){
             session.user.password = undefined
@@ -120,6 +120,6 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.get(PERMISSION_TABLE, {where: where}))[0]
+        return (await this.database.getFromDatabaseTable(PERMISSION_TABLE, {where: where}))[0]
     }
 }
