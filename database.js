@@ -98,7 +98,7 @@ module.exports = class Database {
             }
         ]
 
-        let session = (await this.database.getFromDatabaseTable(SESSION_TABLE, {where: where, implement: implement}))[0]
+        let session = (await this.database.getFromDatabaseTable(SESSION_TABLE, {where: where, implement: implement})).results[0]
 
         if(session && session.user){
             session.user.password = undefined
@@ -120,6 +120,6 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.getFromDatabaseTable(PERMISSION_TABLE, {where: where}))[0]
+        return (await this.database.getFromDatabaseTable(PERMISSION_TABLE, {where: where})).results[0]
     }
 }
